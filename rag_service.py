@@ -11,7 +11,9 @@ from pydantic import BaseModel, Field
 from langchain_core.runnables import RunnableLambda
 from typing import Literal
 import re
+from dotenv import load_dotenv
 
+load_dotenv()
 
 class RAGResponse(BaseModel):
     answer: str = Field(description="The detailed answer to the question or the generated notes.")
@@ -45,7 +47,12 @@ class RAGService:
         )
 
     def _get_llm(self, model_name: str):
-        return ChatOllama(model=model_name, temperature=0.7, format='json')
+        if "cloud" in model_name:
+            host = "https://ollama.com/"
+        else:
+            host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+            
+        return ChatOllama(model=model_name, temperature=0.7, format='json', base_url=host)
 
     def ingest_video(self, video_id: str):
         """

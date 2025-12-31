@@ -3,6 +3,10 @@ from logger import setup_logger
 from models import VideoIngestRequest, QueryRequest, NotesRequest, ResponseModel
 from rag_service import RAGService
 import uvicorn
+import shutil
+import os
+from fastapi.responses import FileResponse
+from fastapi import BackgroundTasks
 
 # Setup logger
 logger = setup_logger("api", "logs/app.log")
@@ -26,6 +30,30 @@ rag_service = RAGService()
 @app.on_event("startup")
 async def startup_event():
     logger.info("Application starting up...")
+
+@app.get("/logs/download")
+async def download_logs(background_tasks: BackgroundTasks):
+    """
+    Downloads the logs directory as a zip file.
+    """
+    log_dir = "logs"
+    zip_filename = "logs_archive.zip"
+    
+    if not os.path.exists(log_dir):
+        # Create logs dir if it checks for it but it's empty/missing, though setup_logger should handle it
+        raise HTTPException(status_code=404, detail="Logs directory not found")
+
+    # Create zip file. make_archive adds .zip extension automatically
+    shutil.make_archive(zip_filename.replace('.zip', ''), 'zip', log_dir)
+    
+    # Clean up zip file after sending
+    background_tasks.add_task(os.remove, zip_filename)
+    
+    return FileResponse(
+        path=zip_filename, 
+        filename=zip_filename, 
+        media_type='application/zip'
+    )
 
 @app.post("/ingest", response_model=dict)
 async def ingest_video(request: VideoIngestRequest):
