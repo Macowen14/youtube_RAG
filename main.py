@@ -31,6 +31,14 @@ rag_service = RAGService()
 async def startup_event():
     logger.info("Application starting up...")
 
+@app.get("/")
+async def root():
+    """
+    Health check endpoint to verify server is running.
+    """
+    return {"status": "live", "message": "YouTube RAG API is running"}
+
+
 @app.get("/logs/download")
 async def download_logs(background_tasks: BackgroundTasks):
     """

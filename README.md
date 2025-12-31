@@ -67,7 +67,19 @@ Interactive documentation (Swagger UI) is available at `http://localhost:8000/do
 
 ## API Endpoints
 
-### 1. Ingest Video
+### 1. Health Check
+
+**GET** `/`
+Returns the status of the API.
+
+```json
+{
+	"status": "live",
+	"message": "YouTube RAG API is running"
+}
+```
+
+### 2. Ingest Video
 
 **POST** `/ingest`
 
