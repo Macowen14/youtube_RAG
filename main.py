@@ -7,6 +7,9 @@ import shutil
 import os
 from fastapi.responses import FileResponse
 from fastapi import BackgroundTasks
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Setup logger
 logger = setup_logger("api", "logs/app.log")
@@ -111,4 +114,12 @@ async def generate_notes(request: NotesRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    # 1. Grab the PORT environment
+    # 2. If it's not found, default to 8080 (for local testing)
+    port = int(os.environ.get("PORT", 8080))
+    
+    # 3. Log the port so you can see it in your dashboard logs
+    logger.info(f"Starting server on port: {port}")
+
+    # 4. Use the variable
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
