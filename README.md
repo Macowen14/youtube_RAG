@@ -52,6 +52,16 @@ python main.py
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+### Production Deployment
+
+For production, use the provided `start.sh` script which utilizes **Gunicorn** with Uvicorn workers for better performance and concurrency:
+
+```bash
+./start.sh
+```
+
+Ensure you have installed the production dependencies (including `gunicorn`).
+
 The API will be available at `http://localhost:8000`.
 Interactive documentation (Swagger UI) is available at `http://localhost:8000/docs`.
 
