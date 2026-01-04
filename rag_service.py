@@ -37,8 +37,8 @@ logger = setup_logger("rag_service", "logs/app.log")
 class RAGService:
     def __init__(self, persist_directory: str = "db"):
         self.persist_directory = persist_directory
-        # Initialize embeddings - assuming a default model for embeddings
-        self.embeddings = OllamaEmbeddings(model="nomic-embed-text:latest")
+        # Initialize embeddings 
+        self.embeddings = OllamaEmbeddings(model="qwen3-embedding:0.6b")
         
         # Initialize ChromaDB persistent client
         self.vector_store = Chroma(
@@ -47,10 +47,10 @@ class RAGService:
         )
 
     def _get_llm(self, model_name: str):
-        if "cloud" in model_name:
-            host = "https://ollama.com/"
-        else:
-            host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+        # if "cloud" in model_name:
+        #     host = "https://ollama.com/"
+        # else:
+        host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
             
         return ChatOllama(model=model_name, temperature=0.7, format='json', base_url=host)
 

@@ -19,12 +19,12 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI(title="YouTube RAG API", version="1.0.0")
 
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+     CORSMiddleware,
+     allow_origins=["*"],  
+     allow_credentials=True,
+     allow_methods=["*"],
+     allow_headers=["*"],
+ )
 
 # Initialize RAG Service
 # In a real app, this might be better as a dependency with @lru_cache or lifespan
