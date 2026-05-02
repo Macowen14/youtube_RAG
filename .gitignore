@@ -13,3 +13,7 @@ wheels/
 # Application Data
 db/
 logs/
+
+cookies.txt
+
+plan.md

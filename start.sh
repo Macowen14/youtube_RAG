@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# Activate virtual environment if it exists
-if [ -d ".venv" ]; then
-    source .venv/bin/activate
+# Use the project virtual environment directly if it exists.
+PYTHON_BIN="python"
+if [ -x ".venv/bin/python" ]; then
+    PYTHON_BIN=".venv/bin/python"
 fi
 
 # Set default port to 8080 if PORT variable is not set by Sevalla
@@ -18,4 +19,4 @@ echo "Starting YouTube RAG Backend on port $PORT..."
 # 3. Added --timeout 120. 
 #    WHY: RAG models take time to load. The default timeout (30s) is often too short.
 
-exec gunicorn -w 1 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:$PORT --timeout 120
+exec "$PYTHON_BIN" -m gunicorn -w 1 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:$PORT --timeout 120

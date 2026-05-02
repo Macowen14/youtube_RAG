@@ -10,7 +10,22 @@ A FastAPI-based application that creates a Retrieval-Augmented Generation (RAG) 
 - **Dynamic LLM Host**: Automatically switches between local (`localhost`) and cloud (`ollama.com`) Ollama hosts based on the model name.
 - **Log Management**: Download application logs as a zip file (`GET /logs/download`).
 
-> [!NOTE] > **Vector Database**: This project currently uses **ChromaDB** running locally for storing vector embeddings. However, the architecture is modular (via LangChain), and you can easily substitute it with a cloud-based service like **Pinecone**, **Weaviate**, or **Milvus** by updating the vector store initialization in `rag_service.py`.
+> [!NOTE] > **Vector Database**: This project currently uses **ChromaDB** running locally for storing vector embeddings. However, the architecture is modular, and you can substitute it with a cloud-based service like **Pinecone**, **Weaviate**, or **Milvus** by adding a new `VideoKnowledgeBase` adapter under `src/infrastructure/vectorstores/`.
+
+## Architecture
+
+The app is organized around clean architecture boundaries:
+
+```text
+src/
+  api/              FastAPI app, routes, request/response schemas
+  application/      Use cases that orchestrate ingest, query, and notes
+  domain/           Core result models and dependency ports
+  infrastructure/   Adapters for Ollama, ChromaDB, yt-dlp, logging, config
+  bootstrap.py      Dependency wiring
+```
+
+`main.py` is the only root-level Python runtime entry point. New behavior should be added under `src/`, with framework and vendor code kept in `infrastructure/` and business workflow decisions kept in `application/`.
 
 ## Prerequisites
 
@@ -20,7 +35,7 @@ A FastAPI-based application that creates a Retrieval-Augmented Generation (RAG) 
 
 ## Installation
 
-1.  **Clone the repository** and navigate to the `youtube_RAG` directory.
+1.  **Clone the repository** and navigate to the `backend` directory.
 
 2.  **Install dependencies**:
 
@@ -49,7 +64,7 @@ Start the FastAPI server:
 python main.py
 
 # OR using uvicorn directly
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Production Deployment
