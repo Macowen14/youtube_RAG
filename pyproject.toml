@@ -20,6 +20,7 @@ dependencies = [
     "pinecone>=8.1.2",
     "psycopg2-binary>=2.9.11",
     "pydantic>=2.12.5",
+    "pyjwt>=2.8.0",
     "python-dotenv>=1.2.1",
     "redis>=7.4.0",
     "requests>=2.32.5",

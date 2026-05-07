@@ -24,3 +24,29 @@ class ResponseModel(BaseModel):
     answer: str = Field(..., description="The answer or generated notes.")
     source: str = Field(..., description="Source of the information.")
 
+
+class CreateNoteRequest(BaseModel):
+    video_id: str
+    content: str
+
+
+class NoteResponse(BaseModel):
+    id: str
+    user_id: str
+    video_id: str
+    content: str
+    created_at: str
+
+
+class CreateSummaryRequest(BaseModel):
+    video_id: str
+    content: str
+
+
+class SummaryResponse(BaseModel):
+    id: str
+    user_id: str
+    video_id: str
+    content: str
+    created_at: str
+

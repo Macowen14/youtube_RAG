@@ -1,37 +1,41 @@
 # YouTube RAG Backend
 
-A FastAPI-based application that creates a Retrieval-Augmented Generation (RAG) system for YouTube videos. It fetches transcripts, stores them in a vector database (ChromaDB), and allows users to ask questions or generate notes based on the video content using Ollama.
+A FastAPI-based application that provides a robust, multi-user backend for the YouTube Better project. Built using **Clean Architecture**, it offers a Retrieval-Augmented Generation (RAG) system for YouTube videos, storing transcripts in a vector database (ChromaDB) and answering questions using Ollama. It also supports personalized user notes and video summaries, fully backed by **Supabase Auth** and **PostgreSQL**.
 
 ## Features
 
-- **Video Ingestion**: Fetches and splits YouTube video transcripts (`POST /ingest`).
-- **Q&A**: Ask questions about the video content (`POST /query`).
-- **Note Generation**: Generate comprehensive notes on specific topics (`POST /notes`).
+- **Multi-User Authentication**: Protected endpoints using Supabase JWT verification.
+- **Video Ingestion**: Fetches and splits YouTube video transcripts (`POST /rag/ingest`).
+- **Q&A**: Ask questions about the video content (`POST /rag/query`).
+- **Notes & Summaries Generation**: Use LLMs to generate notes (`POST /rag/generate-notes`) and summaries (`POST /rag/generate-summary`).
+- **Personalized Storage**: Full CRUD endpoints for users to manage their own notes (`/notes`) and summaries (`/summaries`) backed by SQLAlchemy.
 - **Dynamic LLM Host**: Automatically switches between local (`localhost`) and cloud (`ollama.com`) Ollama hosts based on the model name.
-- **Log Management**: Download application logs as a zip file (`GET /logs/download`).
+- **Rate Limiting**: Protects all endpoints from abuse using `slowapi`.
 
-> [!NOTE] > **Vector Database**: This project currently uses **ChromaDB** running locally for storing vector embeddings. However, the architecture is modular, and you can substitute it with a cloud-based service like **Pinecone**, **Weaviate**, or **Milvus** by adding a new `VideoKnowledgeBase` adapter under `src/infrastructure/vectorstores/`.
+> [!NOTE] 
+> **Vector Database**: This project currently uses **ChromaDB** running locally for storing vector embeddings. The architecture is modular, and you can substitute it with a cloud-based service like Pinecone or Weaviate by updating the `VideoKnowledgeBase` adapter.
 
 ## Architecture
 
-The app is organized around clean architecture boundaries:
+The app is organized around strict **Clean Architecture** boundaries:
 
 ```text
 src/
-  api/              FastAPI app, routes, request/response schemas
-  application/      Use cases that orchestrate ingest, query, and notes
-  domain/           Core result models and dependency ports
-  infrastructure/   Adapters for Ollama, ChromaDB, yt-dlp, logging, config
+  api/              FastAPI app initialization, endpoint routers, schemas
+  application/      Use cases orchestrating logic (RAG, Notes, Summaries)
+  domain/           Core data models and dependency interfaces
+  infrastructure/   Adapters for DB (SQLAlchemy), Auth (PyJWT/Supabase), LLMs, Vector DBs
   bootstrap.py      Dependency wiring
 ```
 
-`main.py` is the only root-level Python runtime entry point. New behavior should be added under `src/`, with framework and vendor code kept in `infrastructure/` and business workflow decisions kept in `application/`.
+For detailed architectural graphs and diagrams, please refer to the `mermaid.md` file.
 
 ## Prerequisites
 
 - Python 3.10+
 - [Ollama](https://ollama.com/) running locally (for local models).
-- `uv` or `pip` for dependency management.
+- **Supabase** Project (For PostgreSQL Database and Authentication).
+- `uv` (recommended) or `pip` for dependency management.
 
 ## Installation
 
@@ -42,16 +46,13 @@ src/
     ```bash
     # Using uv (recommended)
     uv sync
-
-    # OR using pip
-    pip install -r requirements.txt
     ```
 
-    _Note: If `requirements.txt` is missing, dependencies are defined in `pyproject.toml`._
-
 3.  **Environment Setup**:
-    Create a `.env` file (optional if using defaults):
+    Create a `.env` file in the `backend/` directory:
     ```env
+    DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres
+    SUPABASE_JWT_SECRET=your-supabase-jwt-secret
     OLLAMA_HOST=http://localhost:11434
     ```
 
@@ -60,11 +61,8 @@ src/
 Start the FastAPI server:
 
 ```bash
-# Direct python execution
-python main.py
-
-# OR using uvicorn directly
-python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# Using uv and uvicorn
+uv run uvicorn main:app --reload --host 0.0.0.0 --port 8060
 ```
 
 ### Production Deployment
@@ -75,62 +73,25 @@ For production, use the provided `start.sh` script which utilizes **Gunicorn** w
 ./start.sh
 ```
 
-Ensure you have installed the production dependencies (including `gunicorn`).
-
-The API will be available at `http://localhost:8000`.
-Interactive documentation (Swagger UI) is available at `http://localhost:8000/docs`.
+Interactive documentation (Swagger UI) is available at `http://localhost:8060/docs`.
 
 ## API Endpoints
 
-### 1. Health Check
+### 1. RAG Operations (Protected & Rate Limited)
+- **POST** `/rag/ingest` - Ingests a YouTube video
+- **POST** `/rag/query` - Ask the LLM a question about the video
+- **POST** `/rag/generate-notes` - Generate comprehensive notes
+- **POST** `/rag/generate-summary` - Generate a quick summary
 
-**GET** `/`
-Returns the status of the API.
+### 2. User Notes (Protected)
+- **POST** `/notes/` - Save a generated note
+- **GET** `/notes/` - Get all notes for the authenticated user (optional `?video_id=...`)
+- **GET** `/notes/{note_id}` - Get a specific note
 
-```json
-{
-	"status": "live",
-	"message": "YouTube RAG API is running"
-}
-```
+### 3. User Summaries (Protected)
+- **POST** `/summaries/` - Save a generated summary
+- **GET** `/summaries/` - Get all summaries for the authenticated user (optional `?video_id=...`)
+- **GET** `/summaries/{summary_id}` - Get a specific summary
 
-### 2. Ingest Video
-
-**POST** `/ingest`
-
-```json
-{
-	"video_id": "dQw4w9WgXcQ"
-}
-```
-
-### 2. Query Video
-
-**POST** `/query`
-
-```json
-{
-	"video_id": "dQw4w9WgXcQ",
-	"question": "What is the main message?",
-	"model_name": "mistral-large-3:675b-cloud"
-}
-```
-
-_Note: If `model_name` contains "cloud", the system connects to `https://ollama.com/`._
-
-### 3. Generate Notes
-
-**POST** `/notes`
-
-```json
-{
-	"video_id": "dQw4w9WgXcQ",
-	"topic": "Key Takeaways",
-	"model_name": "llama3"
-}
-```
-
-### 4. Download Logs
-
-**GET** `/logs/download`
-Downloads the server logs as a `.zip` file.
+### 4. Admin
+- **GET** `/logs/download` - Downloads the server logs as a `.zip` file.
