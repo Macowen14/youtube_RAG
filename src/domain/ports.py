@@ -1,3 +1,4 @@
+import logging
 from typing import Protocol
 
 from src.domain.models import RAGResult, RetrievedChunk
@@ -17,7 +18,13 @@ class VideoKnowledgeBase(Protocol):
     def has_video(self, video_id: str) -> bool:
         """Return whether chunks already exist for the video."""
 
-    def add_video_chunks(self, video_id: str, chunks: list[str]) -> None:
+    def add_video_chunks(
+        self,
+        video_id: str,
+        chunks: list[str],
+        *,
+        logger: logging.Logger | None = None,
+    ) -> None:
         """Persist chunks associated with a video."""
 
     def search(self, video_id: str, query: str, *, k: int, fetch_k: int) -> list[RetrievedChunk]:
@@ -30,4 +37,3 @@ class RAGGenerator(Protocol):
 
     def generate_notes(self, *, context: str, topic: str, model_name: str) -> RAGResult:
         """Generate structured notes for a topic."""
-

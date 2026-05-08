@@ -10,6 +10,7 @@ A FastAPI-based application that provides a robust, multi-user backend for the Y
 - **Notes & Summaries Generation**: Use LLMs to generate notes (`POST /rag/generate-notes`) and summaries (`POST /rag/generate-summary`).
 - **Personalized Storage**: Full CRUD endpoints for users to manage their own notes (`/notes`) and summaries (`/summaries`) backed by SQLAlchemy.
 - **Dynamic LLM Host**: Automatically switches between local (`localhost`) and cloud (`ollama.com`) Ollama hosts based on the model name.
+- **LLM Provider Selection**: Use Ollama by default, or switch to OpenAI with a cost-aware default model that supports function calling and structured outputs.
 - **Rate Limiting**: Protects all endpoints from abuse using `slowapi`.
 
 > [!NOTE] 
@@ -52,8 +53,13 @@ For detailed architectural graphs and diagrams, please refer to the `mermaid.md`
     Create a `.env` file in the `backend/` directory:
     ```env
     DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres
-    SUPABASE_JWT_SECRET=your-supabase-jwt-secret
+    SUPABASE_URL=https://your-project-ref.supabase.co
+    SUPABASE_KEY=your-supabase-publishable-or-anon-key
     OLLAMA_HOST=http://localhost:11434
+    LLM_PROVIDER=ollama
+    OLLAMA_MODEL_NAME=deepseek-v3.1:671b-cloud
+    OPENAI_API_KEY=your-openai-api-key
+    MODEL_NAME=gpt-5.4-mini
     ```
 
 ## Running the Application
@@ -62,7 +68,7 @@ Start the FastAPI server:
 
 ```bash
 # Using uv and uvicorn
-uv run uvicorn main:app --reload --host 0.0.0.0 --port 8060
+uv run uvicorn main:app --reload --host 0.0.0.0 --port 8080
 ```
 
 ### Production Deployment
@@ -73,7 +79,31 @@ For production, use the provided `start.sh` script which utilizes **Gunicorn** w
 ./start.sh
 ```
 
-Interactive documentation (Swagger UI) is available at `http://localhost:8060/docs`.
+Ollama is the default provider. To run with OpenAI instead:
+
+```bash
+./start.sh --provider openai
+```
+
+You can also override the provider default model at startup:
+
+```bash
+./start.sh --provider openai --model gpt-5.4-mini
+./start.sh --provider ollama --model deepseek-v3.1:671b-cloud
+```
+
+RAG request bodies may override the server default per request:
+
+```json
+{
+  "video_id": "VIDEO_ID",
+  "question": "What is the main point?",
+  "provider": "openai",
+  "model_name": "gpt-5.4-mini"
+}
+```
+
+Interactive documentation (Swagger UI) is available at `http://localhost:8080/docs`.
 
 ## API Endpoints
 
@@ -92,6 +122,3 @@ Interactive documentation (Swagger UI) is available at `http://localhost:8060/do
 - **POST** `/summaries/` - Save a generated summary
 - **GET** `/summaries/` - Get all summaries for the authenticated user (optional `?video_id=...`)
 - **GET** `/summaries/{summary_id}` - Get a specific summary
-
-### 4. Admin
-- **GET** `/logs/download` - Downloads the server logs as a `.zip` file.

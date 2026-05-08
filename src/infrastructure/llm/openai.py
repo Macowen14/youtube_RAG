@@ -1,22 +1,13 @@
-from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnableLambda
-from langchain_ollama import ChatOllama
+from langchain_openai import ChatOpenAI
 
 from src.domain.models import RAGResult
-from src.infrastructure.llm.common import (
-    ANSWER_PROMPT_TEMPLATE,
-    NOTES_PROMPT_TEMPLATE,
-    StructuredRAGResponse,
-    clean_json_output,
-)
+from src.infrastructure.llm.common import ANSWER_PROMPT_TEMPLATE, NOTES_PROMPT_TEMPLATE, StructuredRAGResponse
 
 
-class OllamaRAGGenerator:
-    def __init__(self, *, base_url: str, temperature: float = 0.7) -> None:
-        self._base_url = base_url
-        self._temperature = temperature
-        self._parser = PydanticOutputParser(pydantic_object=StructuredRAGResponse)
+class OpenAIRAGGenerator:
+    def __init__(self, *, api_key: str) -> None:
+        self._api_key = api_key
 
     def answer_question(self, *, context: str, question: str, model_name: str) -> RAGResult:
         response = self._invoke(
@@ -35,18 +26,17 @@ class OllamaRAGGenerator:
         return RAGResult(answer=response.answer, source=response.source)
 
     def _invoke(self, prompt_template: str, *, model_name: str, variables: dict) -> StructuredRAGResponse:
-        llm = ChatOllama(
-            model=model_name,
-            temperature=self._temperature,
-            format="json",
-            base_url=self._base_url,
-        )
+        if not self._api_key:
+            raise ValueError("OPENAI_API_KEY is required when using the OpenAI LLM provider.")
+
+        llm = ChatOpenAI(model=model_name, api_key=self._api_key)
+        structured_llm = llm.with_structured_output(StructuredRAGResponse, method="function_calling")
         prompt = ChatPromptTemplate.from_template(prompt_template)
-        chain = prompt | llm | RunnableLambda(clean_json_output) | self._parser
+        chain = prompt | structured_llm
 
         return chain.invoke(
             {
                 **variables,
-                "format_instructions": self._parser.get_format_instructions(),
+                "format_instructions": "Return a structured response matching the requested schema.",
             }
         )

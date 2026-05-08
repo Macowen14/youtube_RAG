@@ -1,22 +1,24 @@
 #!/bin/bash
 
-# Use the project virtual environment directly if it exists.
-PYTHON_BIN="python"
-if [ -x ".venv/bin/python" ]; then
+# 'set -e' exits on error, '-u' errors on undefined variables, 
+# '-o pipefail' ensures errors in piped commands are caught.
+set -euo pipefail
+
+# Ensures the script executes relative to its own location,
+# allowing you to run it from any folder without path errors.
+cd "$(dirname "$0")"
+
+# Logic to determine which Python executable to use.
+if [ -n "${PYTHON_BIN:-}" ]; then
+    # Do nothing if PYTHON_BIN is already set by the user.
+    :
+elif [ -x ".venv/bin/python" ]; then
+    # Use the virtual environment if it exists.
     PYTHON_BIN=".venv/bin/python"
+else
+    # Fallback to the system's default python command.
+    PYTHON_BIN="python"
 fi
 
-# Set default port to 8080 if PORT variable is not set by Sevalla
-PORT=${PORT:-8080}
-
-echo "Starting YouTube RAG Backend on port $PORT..."
-
-# CHANGES MADE:
-# 1. Used 0.0.0.0:$PORT to bind to the dynamic port Sevalla assigns.
-# 2. Reduced workers (-w) to 1. 
-#    WHY: RAG apps are memory heavy. 4 workers = 4x memory usage = Crash.
-#    Increase this only if your server has massive RAM.
-# 3. Added --timeout 120. 
-#    WHY: RAG models take time to load. The default timeout (30s) is often too short.
-
-exec "$PYTHON_BIN" -m gunicorn -w 1 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:$PORT --timeout 120
+# Execute main.py with all passed arguments
+exec "$PYTHON_BIN" main.py "$@"

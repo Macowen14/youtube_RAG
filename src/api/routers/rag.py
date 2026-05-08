@@ -1,8 +1,4 @@
-import os
-import shutil
-
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends, HTTPException
 
 from src.api.dependencies import get_rag_service
 from src.api.schemas import NotesRequest, QueryRequest, ResponseModel, VideoIngestRequest
@@ -43,7 +39,8 @@ async def query_video(
         response = rag_service.ask_question(
             video_id=request.video_id,
             question=request.question,
-            model_name=request.model_name or "mistral-large-3:675b-cloud",
+            provider=request.provider,
+            model_name=request.model_name,
         )
         return ResponseModel(answer=response.answer, source=response.source)
     except Exception as exc:
@@ -67,7 +64,8 @@ async def generate_notes(
         response = rag_service.generate_notes(
             video_id=request.video_id,
             topic=request.topic,
-            model_name=request.model_name or "mistral-large-3:675b-cloud",
+            provider=request.provider,
+            model_name=request.model_name,
         )
         return ResponseModel(answer=response.answer, source=response.source)
     except Exception as exc:
@@ -90,7 +88,8 @@ async def generate_summary(
         response = rag_service.generate_summary(
             video_id=request.video_id,
             topic=request.topic,
-            model_name=request.model_name or "mistral-large-3:675b-cloud",
+            provider=request.provider,
+            model_name=request.model_name,
         )
         return ResponseModel(answer=response.answer, source=response.source)
     except Exception as exc:
