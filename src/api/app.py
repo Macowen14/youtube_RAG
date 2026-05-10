@@ -35,5 +35,16 @@ def create_app() -> FastAPI:
     async def startup_event():
         logger.info("Application starting up...")
 
+        # Run Alembic migrations on startup
+        try:
+            from alembic.config import Config
+            from alembic import command
+
+            alembic_cfg = Config("alembic.ini")
+            command.upgrade(alembic_cfg, "head")
+            logger.info("Database migrations applied successfully.")
+        except Exception as exc:
+            logger.error("Failed to run database migrations: %s", exc)
+
     return app
 

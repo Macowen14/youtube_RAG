@@ -1,6 +1,5 @@
 from src.application.services import YouTubeRAGService
 from src.infrastructure.config import Settings
-from src.infrastructure.llm.ollama import OllamaRAGGenerator
 from src.infrastructure.llm.openai import OpenAIRAGGenerator
 from src.infrastructure.logging import setup_logger
 from src.infrastructure.text_splitter import LangChainTextChunker
@@ -16,14 +15,7 @@ def create_rag_service(settings: Settings | None = None) -> YouTubeRAGService:
         transcript_provider=YtDlpTranscriptProvider(logger=setup_logger("transcript_service", settings.log_file)),
         chunker=LangChainTextChunker(),
         knowledge_base=ChromaVideoKnowledgeBase(persist_directory=settings.persist_directory),
-        generators={
-            "ollama": OllamaRAGGenerator(base_url=settings.ollama_host),
-            "openai": OpenAIRAGGenerator(api_key=settings.openai_api_key),
-        },
-        default_provider=settings.llm_provider,
-        default_models={
-            "ollama": settings.ollama_model_name,
-            "openai": settings.openai_model_name,
-        },
+        generator=OpenAIRAGGenerator(api_key=settings.openai_api_key),
+        default_model=settings.openai_model_name,
         logger=logger,
     )

@@ -24,8 +24,8 @@ graph TD
     
     subgraph "Infrastructure Layer (Adapters)"
         DB[(PostgreSQL via SQLAlchemy)]
-        VectorDB[(ChromaDB)]
-        LLM[Ollama / Cloud LLM]
+        VectorDB["ChromaDB + Ollama Embeddings (qwen3-embedding:0.6b)"]
+        LLM[OpenAI API]
         TranscriptAPI[yt-dlp / YouTube Transcripts]
     end
     
@@ -79,7 +79,7 @@ classDiagram
         +auth/security.py
         +database/db.py
         +database/db_models.py
-        +llm/ollama_client.py
+        +llm/openai.py
         +vectorstores/chroma.py
     }
 

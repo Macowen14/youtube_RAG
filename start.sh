@@ -20,5 +20,10 @@ else
     PYTHON_BIN="python"
 fi
 
+# Run database migrations before starting the server.
+echo "Running database migrations..."
+"$PYTHON_BIN" -m alembic upgrade head
+echo "Migrations complete."
+
 # Execute main.py with all passed arguments
 exec "$PYTHON_BIN" main.py "$@"

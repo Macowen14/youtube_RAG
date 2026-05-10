@@ -1,9 +1,6 @@
-from typing import Literal, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field
-
-
-LLMProvider = Literal["ollama", "openai"]
 
 
 class VideoIngestRequest(BaseModel):
@@ -14,15 +11,13 @@ class VideoIngestRequest(BaseModel):
 class QueryRequest(BaseModel):
     video_id: str = Field(..., description="The YouTube video ID to query.")
     question: str = Field(..., description="The question to ask about the video.")
-    provider: Optional[LLMProvider] = Field(None, description="LLM provider to use. Defaults to the server provider.")
-    model_name: Optional[str] = Field(None, description="The LLM model to use. Defaults by provider.")
+    model_name: Optional[str] = Field(None, description="The OpenAI model to use. Defaults to server default.")
 
 
 class NotesRequest(BaseModel):
     video_id: str = Field(..., description="The YouTube video ID to generate notes for.")
     topic: str = Field(..., description="The specific topic to focus the notes on.")
-    provider: Optional[LLMProvider] = Field(None, description="LLM provider to use. Defaults to the server provider.")
-    model_name: Optional[str] = Field(None, description="The LLM model to use. Defaults by provider.")
+    model_name: Optional[str] = Field(None, description="The OpenAI model to use. Defaults to server default.")
 
 
 class ResponseModel(BaseModel):

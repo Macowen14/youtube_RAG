@@ -24,7 +24,12 @@ async def ingest_video(
         rag_service.ingest_video(request.video_id)
         return {"message": f"Successfully ingested video {request.video_id}"}
     except Exception as exc:
-        logger.exception("Ingestion failed.")
+        logger.exception(
+            "Ingestion failed for video_id: %s by user: %s. Error: %s",
+            request.video_id,
+            user_id,
+            str(exc)
+        )
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -39,12 +44,17 @@ async def query_video(
         response = rag_service.ask_question(
             video_id=request.video_id,
             question=request.question,
-            provider=request.provider,
             model_name=request.model_name,
         )
         return ResponseModel(answer=response.answer, source=response.source)
     except Exception as exc:
-        logger.exception("Query failed.")
+        logger.exception(
+            "Query failed for video_id: %s by user: %s. Question: '%s'. Error: %s",
+            request.video_id,
+            user_id,
+            request.question,
+            str(exc)
+        )
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -64,12 +74,17 @@ async def generate_notes(
         response = rag_service.generate_notes(
             video_id=request.video_id,
             topic=request.topic,
-            provider=request.provider,
             model_name=request.model_name,
         )
         return ResponseModel(answer=response.answer, source=response.source)
     except Exception as exc:
-        logger.exception("Notes generation failed.")
+        logger.exception(
+            "Notes generation failed for video_id: %s by user: %s. Topic: '%s'. Error: %s",
+            request.video_id,
+            user_id,
+            request.topic,
+            str(exc)
+        )
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 @router.post("/generate-summary", response_model=ResponseModel)
@@ -88,10 +103,15 @@ async def generate_summary(
         response = rag_service.generate_summary(
             video_id=request.video_id,
             topic=request.topic,
-            provider=request.provider,
             model_name=request.model_name,
         )
         return ResponseModel(answer=response.answer, source=response.source)
     except Exception as exc:
-        logger.exception("Summary generation failed.")
+        logger.exception(
+            "Summary generation failed for video_id: %s by user: %s. Topic: '%s'. Error: %s",
+            request.video_id,
+            user_id,
+            request.topic,
+            str(exc)
+        )
         raise HTTPException(status_code=500, detail=str(exc)) from exc
