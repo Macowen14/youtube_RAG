@@ -9,9 +9,10 @@ Architecture note
 -----------------
 The backend uses a **split-provider** strategy:
 
-* **Neon PostgreSQL** — primary relational data store (notes, summaries).
-* **Supabase Auth**   — JWT-based user authentication only; no Supabase DB.
-* **OpenAI**          — LLM inference for RAG queries & note generation.
+* **Neon PostgreSQL**  — primary relational data store (notes, summaries).
+* **Supabase Auth**    — JWT-based user authentication only; no Supabase DB.
+* **OpenAI**           — LLM inference for RAG queries & note generation.
+* **Pinecone**         — serverless vector store with integrated inference.
 """
 
 from __future__ import annotations
@@ -52,9 +53,12 @@ class Settings:
         default_factory=lambda: os.getenv("MODEL_NAME", "gpt-5.4-mini"),
     )
 
-    # ── Vector Store ─────────────────────────────────────────────────────
-    persist_directory: str = field(
-        default_factory=lambda: os.getenv("CHROMA_PERSIST_DIRECTORY", "db"),
+    # ── Vector Store (Pinecone) ──────────────────────────────────────────
+    pinecone_api_key: str = field(
+        default_factory=lambda: os.getenv("PINECONE_API_KEY", ""),
+    )
+    pinecone_index_name: str = field(
+        default_factory=lambda: os.getenv("PINECONE_INDEX_NAME", "youtube-rag"),
     )
 
     # ── Observability ────────────────────────────────────────────────────
